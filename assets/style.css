@@ -59,3 +59,32 @@ h3 {
     padding: 0.3rem;
     margin-bottom: 1rem;
 }
+
+
+/* UV Index Classes */
+#uvi-span {
+    padding: 0.25rem 1rem;
+    border-radius: 5px;
+    color: white;
+    font-size: small;
+}
+
+.low {
+    background-color: green;
+}
+
+.moderate {
+    background-color: yellow;
+}
+
+.high {
+    background-color: orange;
+}
+
+.very-high {
+    background-color: red;
+}
+
+.extreme {
+    background-color: violet;
+}
