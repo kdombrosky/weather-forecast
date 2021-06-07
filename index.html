@@ -23,8 +23,12 @@
                         <input type="text" id="city-name" name="city-name" placeholder="San Diego" class="form-control">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="btn-group">
                         <button type="button" id="submit" class="btn btn-primary btn-block">Search</button>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" id="clear" class="btn btn-secondary btn-block">Clear Storage</button>
                     </div>
                 </form>
             </div>
@@ -33,7 +37,7 @@
             <div class="col-8">
                 <!-- Current Weather Data-->
                 <section class="current-weather container-fluid">
-                    <div class="row">
+                    <div class="row current-heading">
                         <h2 id="current-city-name"></h2>
                         <h2 id="current-date"></h2>
                         <span id="current-icon"></span>

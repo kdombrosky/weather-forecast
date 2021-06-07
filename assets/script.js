@@ -4,8 +4,10 @@ var currentDateEl = document.querySelector("#current-date");
 var currentIconEl = document.querySelector("#current-icon");
 var currentWeatherDataEl = document.querySelector("#current-weather-data");
 var cityNameEl = document.querySelector("#city-name");
+var btnGroupEl = document.querySelector("#btn-group");
 var searchBtn = document.querySelector("#submit");
 var forecastEl = document.querySelector(".forecast");
+var clearStorageEl = document.querySelector("#clear");
 
 // function to clear appended children
 var clearContent = function() {
@@ -16,13 +18,33 @@ var clearContent = function() {
 	while(forecastEl.firstChild) {
         forecastEl.removeChild(forecastEl.firstChild);
     }
+
+	while(btnGroupEl.lastChild.id !== 'submit' && btnGroupEl.lastChild.id !== 'clear') {
+		btnGroupEl.removeChild(btnGroupEl.lastChild);
+	}
 };
 
 // when search button is clicked 
-var citySave = function() {
+var cityCheck = function() {
+	clearContent();
 	var cityName = cityNameEl.value; 
+	cityNameEl.value = "";
 	if(!cityName) { alert("Please enter a city"); }
 	currentWeather(cityName);
+}
+
+// when saved city button is clicked 
+var savedCity = function(event) {
+	clearContent();
+	var cityName = event.target.innerText;
+	currentWeather(cityName);
+}
+
+// clear local storage 
+var clearStorage = function() {
+	localStorage.clear(); 
+	clearContent();
+	currentWeather();
 }
 
 // populate 5 day forecast
@@ -44,7 +66,7 @@ var forecastFunction = function(lat, lon, currentDate) {
 			if(uviValue >= 8 && uviValue < 11) {uviValueEl.className = "very-high"; }
 			if(uviValue >= 11) {uviValueEl.className = "extreme"; }
 
-			for(i=0; i<5; i++) {
+			for(var i=0; i<5; i++) {
 				// create container for forecast card
 				var forecastDiv = document.createElement("div");
 				forecastDiv.className = "forecast-item col";
@@ -84,16 +106,41 @@ var forecastFunction = function(lat, lon, currentDate) {
 	});
 }
 
-
-// function to get current weather data *uvi in next function*
+// load current weather data and load/save to localstorage *uvi in next function*
 var currentWeather = function(cityName) {
-	if(!cityName) { cityName = "Orlando"; }
-	// save cityName to local storage *** 
+	// load storage
+	var cityStorage = localStorage.getItem("cityStorage"); 
+	if(cityStorage) { 
+		cityStorage = JSON.parse(cityStorage);
+	} else {
+		cityStorage= [];
+	}
+	// save to storage 
+	if(cityName) {
+		cityStorage.push(cityName);
+		localStorage.setItem("cityStorage", JSON.stringify(cityStorage));
+	} else { 
+		cityName = "Orlando"; 
+	}
+	// display stored cities as buttons
+	for (var i=0; i < cityStorage.length; i++) {
+		var savedBtn = document.createElement("button");
+		savedBtn.className = "btn btn-secondary btn-block saved";
+		savedBtn.setAttribute("type", "button");
+		savedBtn.textContent = cityStorage[i]; 
+		btnGroupEl.appendChild(savedBtn);
+	}
+	// add event listeners to all buttons
+	document.querySelectorAll('.saved').forEach(item => {
+		item.addEventListener('click', event => {
+			savedCity(event);
+		});
+	});
 
+	// populate with weather data from API
 	fetch("http://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=5ee845610c9466b9c16eac1440fc63ce&units=imperial")
 	.then(function(response) {
 		response.json().then(function(data) {
-			console.log(data);
 			if(response.ok) {
 			// grab data from api for current weather
 			var lat = data.coord.lat; 
@@ -107,12 +154,12 @@ var currentWeather = function(cityName) {
 			currentCityNameEl.innerHTML = cityName;
 			var currentDate = moment().format("L");
 			currentDateEl.textContent = currentDate;
-			//var currentIcon = 
-			// add icon representing clouds/sun/rain ***
-			//currentIconEl.innerHTML= "<img src='http://openweathermap.org/img/w/" + data. + ".png'/>";
-			// update entire card with data: temp, wind speed, humidity, uvi
-			clearContent();
-
+			var currentIcon = data.weather[0].icon;
+			currentIconEl.innerHTML= "<img src='http://openweathermap.org/img/w/" + currentIcon + ".png'/>";
+			
+			// replace content
+			//clearContent();
+			// update current-weather with temp, wind speed, humidity
 			var tempEl = document.createElement("p");
 			tempEl.textContent = "Temp: " + temp + "°F";
 			currentWeatherDataEl.appendChild(tempEl);
@@ -124,14 +171,16 @@ var currentWeather = function(cityName) {
 			var humidityEl = document.createElement("p");
 			humidityEl.textContent = "Humidity: " + humidity + " %";
 			currentWeatherDataEl.appendChild(humidityEl);
-
+			
+			// send coordinates to retrieve forecast
 			forecastFunction(lat, lon, currentDate);
 			} else {
-				currentCityNameEl.innerHTML = "Error: Could not find city";
+				clearContent();
+				alert("Error: Could not find city");
 			}
 		});
 	}).catch(function(error) {
-        currentCityNameEl.innerHTML = "Can not connect to weather app";
+		alert("Error: Can not connect to weather app");
     });
 };
 
@@ -139,16 +188,7 @@ var currentWeather = function(cityName) {
 currentWeather();
 
 // change weather to user input
-searchBtn.addEventListener("click", citySave);
+searchBtn.addEventListener("click", cityCheck);
 
-
-//-------------------------------------------------------------------------------------------------------------
-// fetch('')
-// .then(function(response) {
-// 	response.json().then(function(data) {
-// 		console.log(data);
-// 	});
-// });
-
-// open weather api key: 5ee845610c9466b9c16eac1440fc63ce
-
+// clear storage
+clearStorageEl.addEventListener("click", clearStorage);
