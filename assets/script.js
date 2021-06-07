@@ -79,7 +79,7 @@ var forecastFunction = function(lat, lon, currentDate) {
 				// add icon to column 
 				var newForecast = data.daily[i].weather[0].icon;
 				var forecastIcon = document.createElement("span");
-				forecastIcon.innerHTML= "<img src='http://openweathermap.org/img/w/" + newForecast + ".png'/>";
+				forecastIcon.innerHTML= "<img src='https://openweathermap.org/img/w/" + newForecast + ".png'/>";
 				forecastDiv.appendChild(forecastIcon);
 
 				// add temp to column 
@@ -138,7 +138,7 @@ var currentWeather = function(cityName) {
 	});
 
 	// populate with weather data from API
-	fetch("http://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=5ee845610c9466b9c16eac1440fc63ce&units=imperial")
+	fetch("https://api.openweathermap.org/data/2.5/weather?q=" + cityName + "&appid=5ee845610c9466b9c16eac1440fc63ce&units=imperial")
 	.then(function(response) {
 		response.json().then(function(data) {
 			if(response.ok) {
@@ -155,7 +155,7 @@ var currentWeather = function(cityName) {
 			var currentDate = moment().format("L");
 			currentDateEl.textContent = currentDate;
 			var currentIcon = data.weather[0].icon;
-			currentIconEl.innerHTML= "<img src='http://openweathermap.org/img/w/" + currentIcon + ".png'/>";
+			currentIconEl.innerHTML= "<img src='https://openweathermap.org/img/w/" + currentIcon + ".png'/>";
 			
 			// replace content
 			//clearContent();
