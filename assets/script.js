@@ -1,19 +1,22 @@
 // DOM elements
 var currentCityNameEl = document.querySelector("#current-city-name");
-var currentDateEl = document.querySelector("#current-day");
+var currentDateEl = document.querySelector("#current-date");
+var currentIconEl = document.querySelector("#current-icon");
 var currentWeatherDataEl = document.querySelector("#current-weather-data");
 var cityNameEl = document.querySelector("#city-name");
 var searchBtn = document.querySelector("#submit");
+var forecastEl = document.querySelector(".forecast");
 
 // function to clear appended children
 var clearContent = function() {
 	while(currentWeatherDataEl.firstChild) {
         currentWeatherDataEl.removeChild(currentWeatherDataEl.firstChild);
     }
+
+	while(forecastEl.firstChild) {
+        forecastEl.removeChild(forecastEl.firstChild);
+    }
 };
-
-// function to populate 5 day forecast 
-
 
 // when search button is clicked 
 var citySave = function() {
@@ -23,11 +26,10 @@ var citySave = function() {
 }
 
 // populate 5 day forecast
-var forecastFunction = function(lat, lon) {
-	fetch('https://api.openweathermap.org/data/2.5/onecall?lat=' + lat + '&lon=' + lon + '&exclude=hourly,minutely&appid=5ee845610c9466b9c16eac1440fc63ce')
+var forecastFunction = function(lat, lon, currentDate) {
+	fetch('https://api.openweathermap.org/data/2.5/onecall?lat=' + lat + '&lon=' + lon + '&exclude=hourly,minutely&units=imperial&appid=5ee845610c9466b9c16eac1440fc63ce')
 	.then(function(response) {
 		response.json().then(function(data) {
-			console.log(data);
 			// add uvi to current weather 
 			var uviEl = document.createElement("p");
 			uviEl.innerHTML = "UV Index: " + "<span id='uvi-span'> </span>"; 
@@ -41,12 +43,49 @@ var forecastFunction = function(lat, lon) {
 			if(uviValue >= 6 && uviValue < 8) {uviValueEl.className = "high"; }
 			if(uviValue >= 8 && uviValue < 11) {uviValueEl.className = "very-high"; }
 			if(uviValue >= 11) {uviValueEl.className = "extreme"; }
+
+			for(i=0; i<5; i++) {
+				// create container for forecast card
+				var forecastDiv = document.createElement("div");
+				forecastDiv.className = "forecast-item col";
+				// add date to column 
+				var newDate = moment(currentDate, "L").add((i+1), 'days').format("L");
+				var forecastDate = document.createElement("h4");
+				forecastDate.textContent = newDate;
+				forecastDiv.appendChild(forecastDate);
+
+				// add icon to column 
+				var newForecast = data.daily[i].weather[0].icon;
+				var forecastIcon = document.createElement("span");
+				forecastIcon.innerHTML= "<img src='http://openweathermap.org/img/w/" + newForecast + ".png'/>";
+				forecastDiv.appendChild(forecastIcon);
+
+				// add temp to column 
+				var futureTemp = data.daily[i].temp.day; 
+				var forecastTemp = document.createElement("p");
+				forecastTemp.textContent = "Temp: " + futureTemp + "°F";
+				forecastDiv.appendChild(forecastTemp);
+
+				// add wind speed to column
+				var futureWind = data.daily[i].wind_speed; 
+				var forecastWind = document.createElement("p");
+				forecastWind.textContent = "Wind: " + futureWind + " MPH";
+				forecastDiv.appendChild(forecastWind);
+
+				// add humidity to column
+				var futureHumidity = data.daily[i].humidity; 
+				var forecastHumidity = document.createElement("p");
+				forecastHumidity.textContent = "Humidity: " + futureHumidity + "%";
+				forecastDiv.appendChild(forecastHumidity);
+				// append container to html 
+				forecastEl.appendChild(forecastDiv);
+			}
 		});
 	});
 }
 
 
-// function to get current weather data *missing uvi* 
+// function to get current weather data *uvi in next function*
 var currentWeather = function(cityName) {
 	if(!cityName) { cityName = "Orlando"; }
 	// save cityName to local storage *** 
@@ -55,13 +94,7 @@ var currentWeather = function(cityName) {
 	.then(function(response) {
 		response.json().then(function(data) {
 			console.log(data);
-			//debugger;
-
-			// if(data.message === "city not found") {
-			// 	currentCityNameEl.textContent = "Error: Can not find city";
-			// 	return;
-			// };
-			
+			if(response.ok) {
 			// grab data from api for current weather
 			var lat = data.coord.lat; 
 			var lon = data.coord.lon;
@@ -69,14 +102,14 @@ var currentWeather = function(cityName) {
 			var clouds = data.clouds;
 			var windSpeed = data.wind.speed;	// mph
 			var humidity = data.main.humidity;	// %
-			// must get uvi from second api 
 			
 			// update current-weather with city name, date, and icon
 			currentCityNameEl.innerHTML = cityName;
 			var currentDate = moment().format("L");
 			currentDateEl.textContent = currentDate;
+			//var currentIcon = 
 			// add icon representing clouds/sun/rain ***
-
+			//currentIconEl.innerHTML= "<img src='http://openweathermap.org/img/w/" + data. + ".png'/>";
 			// update entire card with data: temp, wind speed, humidity, uvi
 			clearContent();
 
@@ -92,7 +125,10 @@ var currentWeather = function(cityName) {
 			humidityEl.textContent = "Humidity: " + humidity + " %";
 			currentWeatherDataEl.appendChild(humidityEl);
 
-			forecastFunction(lat, lon);
+			forecastFunction(lat, lon, currentDate);
+			} else {
+				currentCityNameEl.innerHTML = "Error: Could not find city";
+			}
 		});
 	}).catch(function(error) {
         currentCityNameEl.innerHTML = "Can not connect to weather app";
